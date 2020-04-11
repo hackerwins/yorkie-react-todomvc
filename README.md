@@ -1,4 +1,4 @@
-# Yorkie JS SDK TodoMVC example with Create React App
+# Realtime collabroative TodoMVC example using CreateReactApp and Yorkie JS SDK.
 
 ## Screenshot
 
