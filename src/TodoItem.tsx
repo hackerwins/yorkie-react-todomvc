@@ -20,6 +20,8 @@ export default class TodoItem extends Component<TodoItemProps, TodoItemState> {
     this.state = {
       editing: false,
     };
+
+    this.handleDoubleClick = this.handleDoubleClick.bind(this);
   }
 
   public handleDoubleClick() {

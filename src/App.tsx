@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
+import yorkie from 'yorkie-js-sdk';
 import { Todo } from './model';
 import Header from './Header';
 import MainSection from './MainSection';
 import 'todomvc-app-css/index.css';
 
 interface AppState {
+  doc: any;
   todos: Array<Todo>;
 }
 
@@ -22,16 +24,23 @@ const initialState = [{
   completed: false,
 }];
 
-type SampleProps = string;
+function getYYYYMMDD(): string {
+  const now = new Date();
+  return`${now.getUTCFullYear()}${('0' + (now.getUTCMonth() + 1)).slice(-2)}${('0' + now.getUTCDate()).slice(-2)}`;
+}
+
+
+type AppProps = string;
 
 class App extends Component<{}, AppState> {
   private actions: { [name: string]: Function };
 
-  constructor(props: SampleProps) {
+  constructor(props: AppProps) {
     super(props);
 
     this.state = {
-      todos: initialState,
+      doc: null,
+      todos: [],
     };
 
     this.actions = {
@@ -39,68 +48,102 @@ class App extends Component<{}, AppState> {
       deleteTodo: this.deleteTodo.bind(this),
       editTodo: this.editTodo.bind(this),
       completeTodo: this.completeTodo.bind(this),
-      completeAll: this.completeAll.bind(this),
       clearCompleted: this.clearCompleted.bind(this),
     };
   }
 
-  public addTodo(text: string) {
+  public async componentDidMount() {
+    const client = yorkie.createClient('https://yorkie.dev/api');
+    await client.activate();
+
+    const doc = yorkie.createDocument('examples', `todo-mvc-${getYYYYMMDD()}`);
+    await client.attach(doc);
+
+    doc.update((root) => {
+      if (!root['todos']) {
+        root['todos'] = initialState;
+      }
+    }, 'create default todos if not exists');
+
+    doc.subscribe((event) => {
+      this.setState(prevState => {
+        return { doc: prevState.doc, todos: prevState.todos };
+      });
+    });
+
     this.setState(prevState => {
-      const todos = [
-        {
-          id:
-          prevState.todos.reduce(
-            (maxId, todo) => Math.max(todo.id, maxId),
-            -1
-          ) + 1,
-          completed: false,
-          text,
-        },
-        ...prevState.todos,
-      ];
-      return { todos };
+      return {
+        doc,
+        todos: doc.getRootObject()['todos']
+      };
+    });
+  }
+
+  public addTodo(text: string) {
+    this.state.doc.update((root) => {
+      root.todos.push({
+        id:
+        root.todos.reduce((maxId, todo) => 
+          Math.max(todo.id, maxId), -1
+        ) + 1,
+        completed: false,
+        text,
+      });
     });
   }
 
   public deleteTodo(id: number) {
-    this.setState(prevState => {
-      const todos = prevState.todos.filter((todo) => todo.id !== id);
-      return { todos };
+    this.state.doc.update((root) => {
+      let target;
+      for (const todo of root.todos) {
+        if (todo.id === id) {
+          target = todo;
+          break;
+        }
+      }
+      if (target) {
+        root.todos.deleteByID(target.getID());
+      }
     });
   }
 
   public editTodo(id: number, text: string) {
-    this.setState(prevState => {
-      const todos = prevState.todos.map((todo) =>
-        todo.id === id ? { ...todo, text } : todo
-      );
-      return { todos };
+    this.state.doc.update((root) => {
+      let target;
+      for (const todo of root.todos) {
+        if (todo.id === id) {
+          target = todo;
+          break;
+        }
+      }
+      if (target) {
+        target.text = text;
+      }
     });
   }
 
   public completeTodo(id: number) {
-    this.setState(prevState => {
-      const todos = prevState.todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      );
-      return { todos };
-    });
-  }
-
-  public completeAll() {
-    this.setState(prevState => {
-      const areAllMarked = prevState.todos.every((todo) => todo.completed);
-      const todos = prevState.todos.map((todo) => {
-        return { ...todo, completed: !areAllMarked };
-      });
-      return { todos };
+    this.state.doc.update((root) => {
+      let target;
+      for (const todo of root.todos) {
+        if (todo.id === id) {
+          target = todo
+          break;
+        }
+      }
+      if (target) {
+        target.completed = !target.completed;
+      }
     });
   }
 
   public clearCompleted() {
-    this.setState(prevState => {
-      const todos = prevState.todos.filter((todo) => todo.completed === false);
-      return { todos };
+    this.state.doc.update((root) => {
+      for (const todo of root.todos) {
+        if (todo.completed) {
+          root.todos.deleteByID(todo.getID());
+        }
+      }
     });
   }
 

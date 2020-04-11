@@ -52,7 +52,7 @@ class MainSection extends Component<MainSectionProps, MainSectionState> {
       <input
         className="toggle-all"
         type="checkbox"
-        checked={completedCount === todos.length}
+        defaultChecked={completedCount === todos.length}
         onChange={completeAll}
       />
     );
