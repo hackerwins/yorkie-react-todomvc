@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import classnames from 'classnames';
 
 const FILTER_TITLES: { [name: string]: string } = {
@@ -7,73 +7,52 @@ const FILTER_TITLES: { [name: string]: string } = {
   SHOW_COMPLETED: 'Completed',
 };
 
+type MouseEventHandler =
+  (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+
 interface FooterProps {
   completedCount: number;
   activeCount: number;
   filter: string;
-  onClearCompleted: (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => void;
+  onClearCompleted: MouseEventHandler;
   onShow: Function;
 }
 
-export default class Footer extends Component<FooterProps> {
-  public renderTodoCount() {
-    const { activeCount } = this.props;
-    const itemWord = activeCount === 1 ? 'item' : 'items';
-
-    return (
+export default function Footer(props: FooterProps) {
+  const {
+    activeCount,
+    completedCount,
+    filter: selectedFilter,
+    onClearCompleted,
+    onShow
+  } = props;
+  return (
+    <footer className="footer">
       <span className="todo-count">
         <strong>{activeCount || 'No'}</strong>
-        &nbsp;{itemWord} left
+        &nbsp;{activeCount === 1 ? 'item' : 'items'} left
       </span>
-    );
-  }
-
-  public renderFilterLink(filter: string) {
-    const title = FILTER_TITLES[filter];
-    const { filter: selectedFilter, onShow } = this.props;
-
-    return (
-      <a
-        href="/#"
-        className={classnames({ selected: filter === selectedFilter })}
-        style={{ cursor: 'pointer' }}
-        onClick={() => onShow(filter)}
-      >
-        {title}
-      </a>
-    );
-  }
-
-  public renderClearButton() {
-    const { completedCount, onClearCompleted } = this.props;
-    if (completedCount === 0) {
-      return null;
-    }
-
-    return (
-      <button type="button" className="clear-completed" onClick={onClearCompleted}>
-        Clear completed
-      </button>
-    );
-  }
-
-  public renderFilterList() {
-    return ['SHOW_ALL', 'SHOW_ACTIVE', 'SHOW_COMPLETED'].map((filter) => (
-      <li key={filter}>{this.renderFilterLink(filter)}</li>
-    ));
-  }
-
-  public render() {
-    return (
-      <footer className="footer">
-        {this.renderTodoCount()}
-
-        <ul className="filters">{this.renderFilterList()}</ul>
-
-        {this.renderClearButton()}
-      </footer>
-    );
-  }
+      <ul className="filters">
+        {
+          ['SHOW_ALL', 'SHOW_ACTIVE', 'SHOW_COMPLETED'].map((filter) => (
+            <li key={filter}>
+              <a
+                href="/#"
+                className={classnames({ selected: filter === selectedFilter })}
+                style={{ cursor: 'pointer' }}
+                onClick={() => onShow(filter)}
+              >
+                {FILTER_TITLES[filter]}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      {!!completedCount && (
+        <button type="button" className="clear-completed" onClick={onClearCompleted}>
+          Clear completed
+        </button>
+      )}
+    </footer>
+  );
 }

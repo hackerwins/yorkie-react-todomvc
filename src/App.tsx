@@ -1,14 +1,8 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import yorkie from 'yorkie-js-sdk';
-import { Todo } from './model';
 import Header from './Header';
 import MainSection from './MainSection';
 import 'todomvc-app-css/index.css';
-
-interface AppState {
-  doc: any;
-  todos: Array<Todo>;
-}
 
 const initialState = [{
   id: 0,
@@ -26,135 +20,111 @@ const initialState = [{
 
 function getYYYYMMDD(): string {
   const now = new Date();
-  return`${now.getUTCFullYear()}${('0' + (now.getUTCMonth() + 1)).slice(-2)}${('0' + now.getUTCDate()).slice(-2)}`;
+  return`${now.getUTCFullYear()}${(`0${now.getUTCMonth() + 1}`).slice(-2)}${(`0${now.getUTCDate()}`).slice(-2)}`;
 }
 
+export default function App() {
+  const [doc, ] = useState(yorkie.createDocument('examples', `todo-mvc-${getYYYYMMDD()}`));
+  const [todos, setTodos] = useState([]);
 
-type AppProps = string;
-
-class App extends Component<{}, AppState> {
-  private actions: { [name: string]: Function };
-
-  constructor(props: AppProps) {
-    super(props);
-
-    this.state = {
-      doc: null,
-      todos: [],
-    };
-
-    this.actions = {
-      addTodo: this.addTodo.bind(this),
-      deleteTodo: this.deleteTodo.bind(this),
-      editTodo: this.editTodo.bind(this),
-      completeTodo: this.completeTodo.bind(this),
-      clearCompleted: this.clearCompleted.bind(this),
-    };
-  }
-
-  public async componentDidMount() {
-    const client = yorkie.createClient('https://yorkie.dev/api');
-    await client.activate();
-
-    const doc = yorkie.createDocument('examples', `todo-mvc-${getYYYYMMDD()}`);
-    await client.attach(doc);
-
-    doc.update((root) => {
-      if (!root['todos']) {
-        root['todos'] = initialState;
-      }
-    }, 'create default todos if not exists');
-
-    doc.subscribe((event) => {
-      this.setState(prevState => {
-        return { doc: prevState.doc, todos: prevState.todos };
+  const actions = {
+    addTodo: (text: string) => {
+      doc.update((root) => {
+        root['todos'].push({
+          id:
+          root['todos'].reduce((maxId, todo) => 
+            Math.max(todo.id, maxId), -1
+          ) + 1,
+          completed: false,
+          text,
+        });
       });
-    });
-
-    this.setState(prevState => {
-      return {
-        doc,
-        todos: doc.getRootObject()['todos']
-      };
-    });
-  }
-
-  public addTodo(text: string) {
-    this.state.doc.update((root) => {
-      root.todos.push({
-        id:
-        root.todos.reduce((maxId, todo) => 
-          Math.max(todo.id, maxId), -1
-        ) + 1,
-        completed: false,
-        text,
+    },
+    deleteTodo: (id: number) => {
+      doc.update((root) => {
+        let target;
+        for (const todo of root['todos']) {
+          if (todo.id === id) {
+            target = todo;
+            break;
+          }
+        }
+        if (target) {
+          root['todos'].deleteByID(target.getID());
+        }
       });
-    });
-  }
-
-  public deleteTodo(id: number) {
-    this.state.doc.update((root) => {
-      let target;
-      for (const todo of root.todos) {
-        if (todo.id === id) {
-          target = todo;
-          break;
+    },
+    editTodo: (id: number, text: string) => {
+      doc.update((root) => {
+        let target;
+        for (const todo of root['todos']) {
+          if (todo.id === id) {
+            target = todo;
+            break;
+          }
         }
-      }
-      if (target) {
-        root.todos.deleteByID(target.getID());
-      }
-    });
-  }
-
-  public editTodo(id: number, text: string) {
-    this.state.doc.update((root) => {
-      let target;
-      for (const todo of root.todos) {
-        if (todo.id === id) {
-          target = todo;
-          break;
+        if (target) {
+          target.text = text;
         }
-      }
-      if (target) {
-        target.text = text;
-      }
-    });
-  }
-
-  public completeTodo(id: number) {
-    this.state.doc.update((root) => {
-      let target;
-      for (const todo of root.todos) {
-        if (todo.id === id) {
-          target = todo
-          break;
+      });
+    },
+    completeTodo: (id: number) => {
+      doc.update((root) => {
+        let target;
+        for (const todo of root['todos']) {
+          if (todo.id === id) {
+            target = todo;
+            break;
+          }
         }
-      }
-      if (target) {
-        target.completed = !target.completed;
-      }
-    });
-  }
-
-  public clearCompleted() {
-    this.state.doc.update((root) => {
-      for (const todo of root.todos) {
-        if (todo.completed) {
-          root.todos.deleteByID(todo.getID());
+        if (target) {
+          target.completed = !target.completed;
         }
-      }
-    });
-  }
+      });
+    },
+    clearCompleted: () => {
+      doc.update((root) => {
+        for (const todo of root['todos']) {
+          if (todo.completed) {
+            root['todos'].deleteByID(todo.getID());
+          }
+        }
+      });
+    }
+  };
 
-  public render() {
-    return (
-      <div className="App">
-        <Header addTodo={this.actions.addTodo} />
-        <MainSection todos={this.state.todos} actions={this.actions} />
-      </div>
-    );
-  }
+  useEffect(() => {
+    async function attachDoc() {
+      // 01. create client with RPCAddr(envoy) then activate it.
+      const client = yorkie.createClient('https://yorkie.dev/api');
+      await client.activate();
+
+      // 02. attach the document into the client.
+      await client.attach(doc);
+
+      // 03. create default todos if not exists.
+      doc.update((root) => {
+        if (!root['todos']) {
+          // eslint-disable-next-line
+          root['todos'] = initialState;
+        }
+      }, 'create default todos if not exists');
+
+      // 04. subscribe change event from local and remote.
+      doc.subscribe((event) => {
+        setTodos(doc.getRootObject()['todos']);
+      });
+
+      // 05. set todos  the attached document.
+      setTodos(doc.getRootObject()['todos']);
+    }
+    attachDoc();
+  }, [doc]);
+
+  return (
+    <div className="App">
+      <Header addTodo={actions.addTodo} />
+      <MainSection todos={todos} actions={actions} />
+    </div>
+  );
 }
-
-export default App;

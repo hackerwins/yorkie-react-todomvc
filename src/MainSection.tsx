@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { Todo } from './model';
 import TodoItem from './TodoItem';
 import Footer from './Footer';
@@ -9,89 +9,36 @@ const TODO_FILTERS: { [name: string]: (todo: Todo) => boolean } = {
   SHOW_COMPLETED: (todo: Todo) => todo.completed,
 };
 
+type ChangeEventHandler = (event: React.ChangeEvent<HTMLInputElement>) => void;
+
 interface MainSectionProps {
   todos: Array<Todo>;
   actions: { [name: string]: Function };
 }
 
-interface MainSectionState {
-  filter: string;
-}
-
-class MainSection extends Component<MainSectionProps, MainSectionState> {
-  constructor(props: MainSectionProps) {
-    super(props);
-
-    this.state = {
-      filter: 'SHOW_ALL',
-    };
-
-    this.handleClearCompleted = this.handleClearCompleted.bind(this);
-    this.handleShow = this.handleShow.bind(this);
+export default function MainSection(props: MainSectionProps) {
+  const [filter, setFilter] = useState('SHOW_ALL');
+  const { todos, actions } = props;
+  const filteredTodos = todos.filter(TODO_FILTERS[filter]);
+  const completedCount = todos.reduce((count, todo) => {
+    return todo.completed ? count + 1 : count;
+  }, 0);
+  const activeCount = todos.length - completedCount;
+  if (todos.length === 0) {
+    return null;
   }
 
-  public handleClearCompleted() {
-    this.props.actions.clearCompleted();
-  }
-
-  public handleShow(filter: string) {
-    this.setState({ filter });
-  }
-
-  public renderToggleAll(completedCount: number) {
-    const { todos, actions } = this.props;
-    if (todos.length === 0) {
-      return null;
-    }
-
-    const completeAll = actions.completeAll as (
-      event: React.ChangeEvent<HTMLInputElement>
-    ) => void;
-
-    return (
+  return (
+    <section className="main">
       <input
         className="toggle-all"
         type="checkbox"
         defaultChecked={completedCount === todos.length}
-        onChange={completeAll}
+        onChange={actions.completeAll as ChangeEventHandler}
       />
-    );
-  }
-
-  public renderFooter(completedCount: number) {
-    const { todos } = this.props;
-    const { filter } = this.state;
-    const activeCount = todos.length - completedCount;
-
-    if (todos.length === 0) {
-      return null;
-    }
-
-    return (
-      <Footer
-        completedCount={completedCount}
-        activeCount={activeCount}
-        filter={filter}
-        onClearCompleted={this.handleClearCompleted}
-        onShow={this.handleShow}
-      />
-    );
-  }
-
-  render() {
-    const { todos, actions } = this.props;
-    const { filter } = this.state;
-
-    const filteredTodos = todos.filter(TODO_FILTERS[filter]);
-    const completedCount = todos.reduce((count, todo) => {
-      return todo.completed ? count + 1 : count;
-    }, 0);
-
-    return (
-      <section className="main">
-        {this.renderToggleAll(completedCount)}
-        <ul className="todo-list">
-          {filteredTodos.map((todo) => (
+      <ul className="todo-list">
+        {
+          filteredTodos.map((todo) => (
             <TodoItem
               key={todo.id}
               todo={todo}
@@ -99,12 +46,16 @@ class MainSection extends Component<MainSectionProps, MainSectionState> {
               deleteTodo={actions.deleteTodo}
               completeTodo={actions.completeTodo}
             />
-          ))}
-        </ul>
-        {this.renderFooter(completedCount)}
-      </section>
-    );
-  }
+          ))
+        }
+      </ul>
+      <Footer
+        completedCount={completedCount}
+        activeCount={activeCount}
+        filter={filter}
+        onClearCompleted={() => actions.clearCompleted()}
+        onShow={setFilter}
+      />
+    </section>
+  );
 }
-
-export default MainSection;
