@@ -24,7 +24,7 @@ function getYYYYMMDD(): string {
 }
 
 export default function App() {
-  const [doc, ] = useState(yorkie.createDocument('examples', `todo-mvc-${getYYYYMMDD()}`));
+  const [doc, ] = useState(() => yorkie.createDocument('examples', `todo-mvc-${getYYYYMMDD()}`));
   const [todos, setTodos] = useState([]);
 
   const actions = {
