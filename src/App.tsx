@@ -30,9 +30,9 @@ export default function App() {
   const actions = {
     addTodo: (text: string) => {
       doc.update((root) => {
-        root['todos'].push({
+        root.todos.push({
           id:
-          root['todos'].reduce((maxId, todo) => 
+          root.todos.reduce((maxId, todo) => 
             Math.max(todo.id, maxId), -1
           ) + 1,
           completed: false,
@@ -43,21 +43,21 @@ export default function App() {
     deleteTodo: (id: number) => {
       doc.update((root) => {
         let target;
-        for (const todo of root['todos']) {
+        for (const todo of root.todos) {
           if (todo.id === id) {
             target = todo;
             break;
           }
         }
         if (target) {
-          root['todos'].deleteByID(target.getID());
+          root.todos.deleteByID(target.getID());
         }
       });
     },
     editTodo: (id: number, text: string) => {
       doc.update((root) => {
         let target;
-        for (const todo of root['todos']) {
+        for (const todo of root.todos) {
           if (todo.id === id) {
             target = todo;
             break;
@@ -71,7 +71,7 @@ export default function App() {
     completeTodo: (id: number) => {
       doc.update((root) => {
         let target;
-        for (const todo of root['todos']) {
+        for (const todo of root.todos) {
           if (todo.id === id) {
             target = todo;
             break;
@@ -84,9 +84,9 @@ export default function App() {
     },
     clearCompleted: () => {
       doc.update((root) => {
-        for (const todo of root['todos']) {
+        for (const todo of root.todos) {
           if (todo.completed) {
-            root['todos'].deleteByID(todo.getID());
+            root.todos.deleteByID(todo.getID());
           }
         }
       });
@@ -112,11 +112,11 @@ export default function App() {
 
       // 04. subscribe change event from local and remote.
       doc.subscribe((event) => {
-        setTodos(doc.getRootObject()['todos']);
+        setTodos(doc.getRoot().todos);
       });
 
       // 05. set todos  the attached document.
-      setTodos(doc.getRootObject()['todos']);
+      setTodos(doc.getRoot().todos);
     }
     attachDoc();
   }, [doc]);

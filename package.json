@@ -10,7 +10,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "todomvc-app-css": "^2.3.0",
-    "yorkie-js-sdk": "^0.0.10"
+    "yorkie-js-sdk": "yorkie-team/yorkie-js-sdk#main"
   },
   "scripts": {
     "start": "react-app-rewired start",
