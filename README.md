@@ -1,8 +1,42 @@
-# TodoMVC example using CreateReactApp and Yorkie JS SDK.
+# Yorkie React TodoMVC
+
+Yorkie React TodoMVC is an example using CreateReactApp and Yorkie JS SDK.
 
 ## Screenshot
 
 ![Screenshot](/screenshot.gif "Screenshot")
+
+This project uses gRPC-web for communicating with Yorkie server built on gRPC.
+
+```
+ +--Browser--+           +--Envoy---------+         +--Yorkie------+
+ |           |           |                |         |              |
+ | gRPC-web  <- HTTP1.1 -> gRPC-web proxy <- HTTP2 -> gRPC server  |
+ |           |           |                |         |              |
+ +-----------+           +----------------+         +--------------+
+```
+
+For more details: https://grpc.io/blog/state-of-grpc-web/
+
+
+### Running TodoMVC
+
+TodoMVC needs backend servers like Yorkie and Envoy. We can simply run them using `docker-compose`.
+To start Yorkie and Envoy proxy in a terminal:
+```
+$ docker-compose -f docker/docker-compose.yml up --build -d
+```
+
+In the project directory, you can run:
+
+```
+$ npm install
+$ npm start
+```
+
+This project was bootstrapped with Create React App.
+
+<details>
 
 ## About this project
 
@@ -50,3 +84,5 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
 To learn React, check out the [React documentation](https://reactjs.org/).
+
+</details>

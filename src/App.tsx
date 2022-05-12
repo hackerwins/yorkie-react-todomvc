@@ -24,7 +24,7 @@ function getYYYYMMDD(): string {
 }
 
 export default function App() {
-  const [doc, ] = useState(() => yorkie.createDocument('examples', `todo-mvc-${getYYYYMMDD()}`));
+  const [doc, ] = useState(() => yorkie.createDocument(`todomvc$${getYYYYMMDD()}`));
   const [todos, setTodos] = useState([]);
 
   const actions = {
@@ -96,7 +96,7 @@ export default function App() {
   useEffect(() => {
     async function attachDoc() {
       // 01. create client with RPCAddr(envoy) then activate it.
-      const client = yorkie.createClient('https://yorkie.dev/api');
+      const client = yorkie.createClient(`${process.env.REACT_APP_YORKIE_RPC_ADDR}`);
       await client.activate();
 
       // 02. attach the document into the client.
