@@ -10,7 +10,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "todomvc-app-css": "^2.3.0",
-    "yorkie-js-sdk": "^0.2.5"
+    "yorkie-js-sdk": "^0.2.11"
   },
   "scripts": {
     "start": "react-app-rewired --openssl-legacy-provider start",

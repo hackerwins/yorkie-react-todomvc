@@ -24,15 +24,15 @@ function getYYYYMMDD(): string {
 }
 
 export default function App() {
-  const [doc, ] = useState(() => yorkie.createDocument(`todomvc$${getYYYYMMDD()}`));
+  const [doc, ] = useState(() => new yorkie.Document(`todomvc$${getYYYYMMDD()}`));
   const [todos, setTodos] = useState([]);
 
   const actions = {
     addTodo: (text: string) => {
       doc.update((root) => {
-        root.todos.push({
+        root['todos'].push({
           id:
-          root.todos.reduce((maxId, todo) => 
+          root['todos'].reduce((maxId, todo) => 
             Math.max(todo.id, maxId), -1
           ) + 1,
           completed: false,
@@ -43,21 +43,21 @@ export default function App() {
     deleteTodo: (id: number) => {
       doc.update((root) => {
         let target;
-        for (const todo of root.todos) {
+        for (const todo of root['todos']) {
           if (todo.id === id) {
             target = todo;
             break;
           }
         }
         if (target) {
-          root.todos.deleteByID(target.getID());
+          root['todos'].deleteByID(target.getID());
         }
       });
     },
     editTodo: (id: number, text: string) => {
       doc.update((root) => {
         let target;
-        for (const todo of root.todos) {
+        for (const todo of root['todos']) {
           if (todo.id === id) {
             target = todo;
             break;
@@ -71,7 +71,7 @@ export default function App() {
     completeTodo: (id: number) => {
       doc.update((root) => {
         let target;
-        for (const todo of root.todos) {
+        for (const todo of root['todos']) {
           if (todo.id === id) {
             target = todo;
             break;
@@ -84,19 +84,19 @@ export default function App() {
     },
     clearCompleted: () => {
       doc.update((root) => {
-        for (const todo of root.todos) {
+        for (const todo of root['todos']) {
           if (todo.completed) {
-            root.todos.deleteByID(todo.getID());
+            root['todos'].deleteByID(todo.getID());
           }
         }
-      });
+      }, "");
     }
   };
 
   useEffect(() => {
     async function attachDoc() {
       // 01. create client with RPCAddr(envoy) then activate it.
-      const client = yorkie.createClient(`${process.env.REACT_APP_YORKIE_RPC_ADDR}`);
+      const client = new yorkie.Client(`${process.env.REACT_APP_YORKIE_RPC_ADDR}`);
       await client.activate();
 
       // 02. attach the document into the client.
@@ -112,11 +112,11 @@ export default function App() {
 
       // 04. subscribe change event from local and remote.
       doc.subscribe((event) => {
-        setTodos(doc.getRoot().todos);
+        setTodos(doc.getRoot()['todos']);
       });
 
       // 05. set todos  the attached document.
-      setTodos(doc.getRoot().todos);
+      setTodos(doc.getRoot()['todos']);
     }
     attachDoc();
   }, [doc]);
