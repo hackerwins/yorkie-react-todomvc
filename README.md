@@ -1,5 +1,7 @@
 # Yorkie React TodoMVC
 
+> This project is no longer in development. Please check the [examples/react-todomvc](https://github.com/yorkie-team/yorkie-js-sdk/tree/main/examples/react-todomvc) in Yorkie JS SDK.
+
 Yorkie React TodoMVC is an example using CreateReactApp and Yorkie JS SDK.
 
 ## Screenshot
